@@ -186,8 +186,14 @@ class StyleFrame:
 
     def create_video(self):
         self.output_frame_directory = glob.glob(f'{self.conf.OUTPUT_FRAME_DIRECTORY}/*')
-        fourcc = cv2.VideoWriter_fourcc(*'MP4V')
+        # Use H.264 encoding to make videos about 2-3 times smaller
+        fourcc = cv2.VideoWriter_fourcc(*'avc1')
         video_writer = cv2.VideoWriter(self.conf.OUTPUT_VIDEO_PATH, fourcc, self.conf.OUTPUT_FPS, (self.frame_width, self.conf.FRAME_HEIGHT))
+        if not video_writer.isOpened():
+            # Fallback to mp4v if, for example, opencv was installed through pip
+            fourcc = cv2.VideoWriter_fourcc(*'MP4V')
+            video_writer = cv2.VideoWriter(self.conf.OUTPUT_VIDEO_PATH, fourcc, self.conf.OUTPUT_FPS, (self.frame_width, self.conf.FRAME_HEIGHT))
+            
 
         for count, filename in enumerate(sorted(self.output_frame_directory)):
             if count % 10 == 0:
