@@ -1,33 +1,47 @@
 # Brycen Westgarth and Tristan Jogminas
 # March 5, 2021
+# Modified by Marcin Zatorski, 15.09.2022
+import argparse
 
 class Config:
-    ROOT_PATH = '.'
-    # defines the maximum height dimension in pixels. Used for down-sampling the video frames
-    FRAME_HEIGHT = 360
-    CLEAR_INPUT_FRAME_CACHE = True
-    # defines the rate at which you want to capture frames from the input video
-    INPUT_FPS = 20
-    INPUT_VIDEO_NAME = 'input_vid.mov'
-    INPUT_VIDEO_PATH = f'{ROOT_PATH}/{INPUT_VIDEO_NAME}'
-    INPUT_FRAME_DIRECTORY = f'{ROOT_PATH}/input_frames'
-    INPUT_FRAME_FILE = '{:0>4d}_frame.png'
-    INPUT_FRAME_PATH = f'{INPUT_FRAME_DIRECTORY}/{INPUT_FRAME_FILE}'
+    def __init__(self):
+        parser = argparse.ArgumentParser(description='Neural style transfer for videos')
+        parser.add_argument('-i', '--input', required=True, help='Path to input video file')
+        parser.add_argument('-o', '--output', required=True, help='Path to output video file')
+        parser.add_argument('--input-fps', type=int, default=30)
+        parser.add_argument('--output-fps', type=int, default=30)
+        parser.add_argument('--frame-height', type=int, default=360, help='Height of output frame')
+        parser.add_argument('--style-sequence', type=int, nargs='+', default=[0, 1, 2])
+        parser.add_argument('--ghost-frame-transparency', type=float, default=0.1)
+        parser.add_argument('--preserve-colors', action='store_true')
+        args = parser.parse_args()
 
-    STYLE_REF_DIRECTORY = f'{ROOT_PATH}/style_ref'
-    # defines the reference style image transition sequence. Values correspond to indices in STYLE_REF_DIRECTORY
-    # add None in the sequence to NOT apply style transfer for part of the video (ie. [None, 0, 1, 2])  
-    STYLE_SEQUENCE = [0, 1, 2]
+        self.ROOT_PATH = '.'
+        # defines the maximum height dimension in pixels. Used for down-sampling the video frames
+        self.FRAME_HEIGHT = args.frame_height
+        self.CLEAR_INPUT_FRAME_CACHE = True
+        # defines the rate at which you want to capture frames from the input video
+        self.INPUT_FPS = args.input_fps
+        self.INPUT_VIDEO_NAME = args.input
+        self.INPUT_VIDEO_PATH = f'{self.ROOT_PATH}/{self.INPUT_VIDEO_NAME}'
+        self.INPUT_FRAME_DIRECTORY = f'{self.ROOT_PATH}/input_frames'
+        self.INPUT_FRAME_FILE = '{:0>4d}_frame.png'
+        self.INPUT_FRAME_PATH = f'{self.INPUT_FRAME_DIRECTORY}/{self.INPUT_FRAME_FILE}'
 
-    OUTPUT_FPS = 20
-    OUTPUT_VIDEO_NAME = 'output_video.mp4'
-    OUTPUT_VIDEO_PATH = f'{ROOT_PATH}/{OUTPUT_VIDEO_NAME}'
-    OUTPUT_FRAME_DIRECTORY = f'{ROOT_PATH}/output_frames'
-    OUTPUT_FRAME_FILE = '{:0>4d}_frame.png'
-    OUTPUT_FRAME_PATH = f'{OUTPUT_FRAME_DIRECTORY}/{OUTPUT_FRAME_FILE}'
+        self.STYLE_REF_DIRECTORY = f'{self.ROOT_PATH}/style_ref'
+        # defines the reference style image transition sequence. Values correspond to indices in STYLE_REF_DIRECTORY
+        # add None in the sequence to NOT apply style transfer for part of the video (ie. [None, 0, 1, 2])  
+        self.STYLE_SEQUENCE = args.style_sequence
 
-    GHOST_FRAME_TRANSPARENCY = 0.1
-    PRESERVE_COLORS = False
+        self.OUTPUT_FPS = args.output_fps
+        self.OUTPUT_VIDEO_NAME = args.output
+        self.OUTPUT_VIDEO_PATH = f'{self.ROOT_PATH}/{self.OUTPUT_VIDEO_NAME}'
+        self.OUTPUT_FRAME_DIRECTORY = f'{self.ROOT_PATH}/output_frames'
+        self.OUTPUT_FRAME_FILE = '{:0>4d}_frame.png'
+        self.OUTPUT_FRAME_PATH = f'{self.OUTPUT_FRAME_DIRECTORY}/{self.OUTPUT_FRAME_FILE}'
 
-    TENSORFLOW_CACHE_DIRECTORY = f'{ROOT_PATH}/tensorflow_cache'
-    TENSORFLOW_HUB_HANDLE = 'https://tfhub.dev/google/magenta/arbitrary-image-stylization-v1-256/2'
+        self.GHOST_FRAME_TRANSPARENCY = args.ghost_frame_transparency
+        self.PRESERVE_COLORS = args.preserve_colors
+
+        self.TENSORFLOW_CACHE_DIRECTORY = f'{self.ROOT_PATH}/tensorflow_cache'
+        self.TENSORFLOW_HUB_HANDLE = 'https://tfhub.dev/google/magenta/arbitrary-image-stylization-v1-256/2'

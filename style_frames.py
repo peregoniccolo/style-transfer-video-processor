@@ -1,5 +1,6 @@
 # Brycen Westgarth and Tristan Jogminas
 # March 5, 2021
+# Modified by Marcin Zatorski, 15.09.2022
 import os
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 import tensorflow_hub as hub
@@ -15,7 +16,7 @@ class StyleFrame:
     MAX_CHANNEL_INTENSITY = 255.0
 
     def __init__(self, conf=Config):
-        self.conf = conf
+        self.conf = conf()
         os.environ['TFHUB_CACHE_DIR'] = self.conf.TENSORFLOW_CACHE_DIRECTORY
         self.hub_module = hub.load(self.conf.TENSORFLOW_HUB_HANDLE)
         self.input_frame_directory = glob.glob(f'{self.conf.INPUT_FRAME_DIRECTORY}/*')
