@@ -44,7 +44,7 @@ class StyleFrame:
             print("Using cached input frames")
             return
         vid_obj = cv2.VideoCapture(self.conf.INPUT_VIDEO_PATH)
-        frame_interval = np.floor((1.0 / self.conf.INPUT_FPS) * 1000)
+        frame_interval = (1.0 / self.conf.INPUT_FPS) * 1000
         success, image = vid_obj.read()
         if image is None:
             raise ValueError(f"ERROR: Please provide missing video: {self.conf.INPUT_VIDEO_PATH}")
@@ -53,7 +53,7 @@ class StyleFrame:
         image = cv2.resize(image, (self.frame_width, self.conf.FRAME_HEIGHT))
         cv2.imwrite(self.conf.INPUT_FRAME_PATH.format(0), image.astype(np.uint8))
 
-        count = 1
+        count = 0
         while success:
             msec_timestamp = count * frame_interval
             vid_obj.set(cv2.CAP_PROP_POS_MSEC, msec_timestamp)
