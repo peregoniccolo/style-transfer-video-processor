@@ -19,14 +19,10 @@ class Config:
         self.ROOT_PATH = '.'
         # defines the maximum height dimension in pixels. Used for down-sampling the video frames
         self.FRAME_HEIGHT = args.frame_height
-        self.CLEAR_INPUT_FRAME_CACHE = True
         # defines the rate at which you want to capture frames from the input video
         self.INPUT_FPS = args.input_fps
         self.INPUT_VIDEO_NAME = args.input
         self.INPUT_VIDEO_PATH = f'{self.ROOT_PATH}/{self.INPUT_VIDEO_NAME}'
-        self.INPUT_FRAME_DIRECTORY = f'{self.ROOT_PATH}/input_frames'
-        self.INPUT_FRAME_FILE = '{:0>4d}_frame.png'
-        self.INPUT_FRAME_PATH = f'{self.INPUT_FRAME_DIRECTORY}/{self.INPUT_FRAME_FILE}'
 
         self.STYLE_REF_DIRECTORY = f'{self.ROOT_PATH}/style_ref'
         # defines the reference style image transition sequence. Values correspond to indices in STYLE_REF_DIRECTORY
@@ -36,9 +32,6 @@ class Config:
         self.OUTPUT_FPS = args.output_fps
         self.OUTPUT_VIDEO_NAME = args.output
         self.OUTPUT_VIDEO_PATH = f'{self.ROOT_PATH}/{self.OUTPUT_VIDEO_NAME}'
-        self.OUTPUT_FRAME_DIRECTORY = f'{self.ROOT_PATH}/output_frames'
-        self.OUTPUT_FRAME_FILE = '{:0>4d}_frame.png'
-        self.OUTPUT_FRAME_PATH = f'{self.OUTPUT_FRAME_DIRECTORY}/{self.OUTPUT_FRAME_FILE}'
 
         self.GHOST_FRAME_TRANSPARENCY = args.ghost_frame_transparency
         self.PRESERVE_COLORS = args.preserve_colors

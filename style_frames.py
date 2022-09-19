@@ -9,7 +9,10 @@ import tensorflow as tf
 import glob
 import cv2
 import logging
+from tqdm import tqdm
 from config import Config
+
+tf.config.optimizer.set_jit('autoclustering')
 
 class StyleFrame:
 
@@ -19,58 +22,33 @@ class StyleFrame:
         self.conf = conf()
         os.environ['TFHUB_CACHE_DIR'] = self.conf.TENSORFLOW_CACHE_DIRECTORY
         self.hub_module = hub.load(self.conf.TENSORFLOW_HUB_HANDLE)
-        self.input_frame_directory = glob.glob(f'{self.conf.INPUT_FRAME_DIRECTORY}/*')
-        self.output_frame_directory = glob.glob(f'{self.conf.OUTPUT_FRAME_DIRECTORY}/*')
         self.style_directory = glob.glob(f'{self.conf.STYLE_REF_DIRECTORY}/*')
         self.ref_count = len(self.conf.STYLE_SEQUENCE)
 
-        files_to_be_cleared = self.output_frame_directory
-        if self.conf.CLEAR_INPUT_FRAME_CACHE:
-            files_to_be_cleared += self.input_frame_directory
+        # Init input related variables
+        self.video_capture = self.create_video_capture()
         
-        for file in files_to_be_cleared:
-            os.remove(file)
-        
-        # Update contents of directory after deletion
-        self.input_frame_directory = glob.glob(f'{self.conf.INPUT_FRAME_DIRECTORY}/*')
-        self.output_frame_directory = glob.glob(f'{self.conf.OUTPUT_FRAME_DIRECTORY}/*')
-
-        if len(self.input_frame_directory):
-            # Retrieve an image in the input frame dir to get the width
-            self.frame_width = cv2.imread(self.input_frame_directory[0]).shape[1]
-
-    def get_input_frames(self):
-        if len(self.input_frame_directory):
-            print("Using cached input frames")
-            return
+    def create_video_capture(self):
         vid_obj = cv2.VideoCapture(self.conf.INPUT_VIDEO_PATH)
-        frame_interval = (1.0 / self.conf.INPUT_FPS) * 1000
         success, image = vid_obj.read()
         if image is None:
             raise ValueError(f"ERROR: Please provide missing video: {self.conf.INPUT_VIDEO_PATH}")
+
+        # Set frame width and frame length
         scale_constant = (self.conf.FRAME_HEIGHT / image.shape[0])
         self.frame_width = int(image.shape[1] * scale_constant)
-        image = cv2.resize(image, (self.frame_width, self.conf.FRAME_HEIGHT))
-        cv2.imwrite(self.conf.INPUT_FRAME_PATH.format(0), image.astype(np.uint8))
 
-        count = 0
-        while success:
-            msec_timestamp = count * frame_interval
-            vid_obj.set(cv2.CAP_PROP_POS_MSEC, msec_timestamp)
-            success, image = vid_obj.read()
-            if not success:
-                break
-            image = cv2.resize(image, (self.frame_width, self.conf.FRAME_HEIGHT))
-            cv2.imwrite(self.conf.INPUT_FRAME_PATH.format(count), image.astype(np.uint8))
-            count += 1
-        self.input_frame_directory = glob.glob(f'{self.conf.INPUT_FRAME_DIRECTORY}/*')
+        frame_count = vid_obj.get(cv2.CAP_PROP_FRAME_COUNT)
+        fps = vid_obj.get(cv2.CAP_PROP_FPS)
+        self.frame_length = int(frame_count / fps * self.conf.INPUT_FPS)
+        
+        return vid_obj
 
     def get_style_info(self):
-        frame_length = len(self.input_frame_directory)
         style_refs = list()
         resized_ref = False
         style_files = sorted(self.style_directory)
-        self.t_const = frame_length if self.ref_count == 1 else np.ceil(frame_length / (self.ref_count - 1))
+        self.t_const = self.frame_length if self.ref_count == 1 else np.ceil(self.frame_length / (self.ref_count - 1))
 
         # Open first style ref and force all other style refs to match size
         first_style_ref = cv2.imread(style_files.pop(0))
@@ -102,12 +80,21 @@ class StyleFrame:
         return img[:self.conf.FRAME_HEIGHT, :self.frame_width]
 
     def get_output_frames(self):
-        self.input_frame_directory = glob.glob(f'{self.conf.INPUT_FRAME_DIRECTORY}/*')
         ghost_frame = None
-        for count, filename in enumerate(sorted(self.input_frame_directory)):
-            if count % 10 == 0:
-                print(f"Output frame: {(count/len(self.input_frame_directory)):.0%}")
-            content_img = cv2.imread(filename) 
+
+        video_writer = self.create_video_writer()
+        frame_interval = (1.0 / self.conf.INPUT_FPS) * 1000
+
+        count = 0
+        success = True
+        progress_bar = tqdm(total=self.frame_length)
+        while success:
+            msec_timestamp = count * frame_interval
+            self.video_capture.set(cv2.CAP_PROP_POS_MSEC, msec_timestamp)
+            success, content_img = self.video_capture.read()
+            if not success:
+                break
+            content_img = cv2.resize(content_img, (self.frame_width, self.conf.FRAME_HEIGHT))
             content_img = cv2.cvtColor(content_img, cv2.COLOR_BGR2RGB) / self.MAX_CHANNEL_INTENSITY
             curr_style_img_index = int(count / self.t_const)
             mix_ratio = 1 - ((count % self.t_const) / self.t_const)
@@ -127,7 +114,7 @@ class StyleFrame:
             # If both, don't need to apply style transfer
             if prev_is_content_img and next_is_content_img:
                 temp_ghost_frame = cv2.cvtColor(ghost_frame, cv2.COLOR_RGB2BGR) * self.MAX_CHANNEL_INTENSITY
-                cv2.imwrite(self.conf.OUTPUT_FRAME_PATH.format(count), temp_ghost_frame)
+                video_writer.write(temp_ghost_frame.astype(np.uint8))
                 continue
             
             if count > 0:
@@ -166,8 +153,12 @@ class StyleFrame:
             ghost_frame = np.asarray(self._trim_img(stylized_img))
 
             temp_ghost_frame = cv2.cvtColor(ghost_frame, cv2.COLOR_RGB2BGR) * self.MAX_CHANNEL_INTENSITY
-            cv2.imwrite(self.conf.OUTPUT_FRAME_PATH.format(count), temp_ghost_frame)
-        self.output_frame_directory = glob.glob(f'{self.conf.OUTPUT_FRAME_DIRECTORY}/*')
+            video_writer.write(temp_ghost_frame.astype(np.uint8))
+            progress_bar.update(1)
+            count += 1
+
+        video_writer.release()
+        self.video_capture.release()
 
     def _color_correct_to_input(self, content, generated):
         # image manipulations for compatibility with opencv
@@ -182,10 +173,8 @@ class StyleFrame:
         color_corrected[:, :, 1] = content[:, :, 1]
         color_corrected[:, :, 2] = content[:, :, 2]
         return cv2.cvtColor(color_corrected, cv2.COLOR_YCrCb2BGR) / self.MAX_CHANNEL_INTENSITY
-
-
-    def create_video(self):
-        self.output_frame_directory = glob.glob(f'{self.conf.OUTPUT_FRAME_DIRECTORY}/*')
+    
+    def create_video_writer(self):
         # Use H.264 encoding to make videos about 2-3 times smaller
         fourcc = cv2.VideoWriter_fourcc(*'avc1')
         video_writer = cv2.VideoWriter(self.conf.OUTPUT_VIDEO_PATH, fourcc, self.conf.OUTPUT_FPS, (self.frame_width, self.conf.FRAME_HEIGHT))
@@ -193,26 +182,13 @@ class StyleFrame:
             # Fallback to mp4v if, for example, opencv was installed through pip
             fourcc = cv2.VideoWriter_fourcc(*'MP4V')
             video_writer = cv2.VideoWriter(self.conf.OUTPUT_VIDEO_PATH, fourcc, self.conf.OUTPUT_FPS, (self.frame_width, self.conf.FRAME_HEIGHT))
-            
-
-        for count, filename in enumerate(sorted(self.output_frame_directory)):
-            if count % 10 == 0:
-                print(f"Saving frame: {(count/len(self.output_frame_directory)):.0%}")
-            image = cv2.imread(filename)
-            video_writer.write(image)
-
-        video_writer.release()
-        print(f"Style transfer complete! Output at {self.conf.OUTPUT_VIDEO_PATH}")
+        return video_writer
 
     def run(self):
-        print("Getting input frames")
-        self.get_input_frames()
         print("Getting style info")
         self.get_style_info()
-        print("Getting output frames")
+        print("Doing style transfer")
         self.get_output_frames()
-        print("Saving video")
-        self.create_video()
 
 if __name__ == "__main__":
     StyleFrame().run()
