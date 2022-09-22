@@ -180,7 +180,7 @@ class StyleFrame:
         video_writer = cv2.VideoWriter(self.conf.OUTPUT_VIDEO_PATH, fourcc, self.conf.OUTPUT_FPS, (self.frame_width, self.conf.FRAME_HEIGHT))
         if not video_writer.isOpened():
             # Fallback to mp4v if, for example, opencv was installed through pip
-            fourcc = cv2.VideoWriter_fourcc(*'MP4V')
+            fourcc = cv2.VideoWriter_fourcc(*'mp4v')
             video_writer = cv2.VideoWriter(self.conf.OUTPUT_VIDEO_PATH, fourcc, self.conf.OUTPUT_FPS, (self.frame_width, self.conf.FRAME_HEIGHT))
         return video_writer
 
