@@ -16,25 +16,22 @@ class Config:
         parser.add_argument('--preserve-colors', action='store_true')
         args = parser.parse_args()
 
-        self.ROOT_PATH = '.'
         # defines the maximum height dimension in pixels. Used for down-sampling the video frames
         self.FRAME_HEIGHT = args.frame_height
         # defines the rate at which you want to capture frames from the input video
         self.INPUT_FPS = args.input_fps
-        self.INPUT_VIDEO_NAME = args.input
-        self.INPUT_VIDEO_PATH = f'{self.ROOT_PATH}/{self.INPUT_VIDEO_NAME}'
+        self.INPUT_VIDEO_PATH = args.input
 
-        self.STYLE_REF_DIRECTORY = f'{self.ROOT_PATH}/style_ref'
+        self.STYLE_REF_DIRECTORY = './style_ref'
         # defines the reference style image transition sequence. Values correspond to indices in STYLE_REF_DIRECTORY
         # add None in the sequence to NOT apply style transfer for part of the video (ie. [None, 0, 1, 2])  
         self.STYLE_SEQUENCE = args.style_sequence
 
         self.OUTPUT_FPS = args.output_fps
-        self.OUTPUT_VIDEO_NAME = args.output
-        self.OUTPUT_VIDEO_PATH = f'{self.ROOT_PATH}/{self.OUTPUT_VIDEO_NAME}'
+        self.OUTPUT_VIDEO_PATH = args.output
 
         self.GHOST_FRAME_TRANSPARENCY = args.ghost_frame_transparency
         self.PRESERVE_COLORS = args.preserve_colors
 
-        self.TENSORFLOW_CACHE_DIRECTORY = f'{self.ROOT_PATH}/tensorflow_cache'
+        self.TENSORFLOW_CACHE_DIRECTORY = f'./tensorflow_cache'
         self.TENSORFLOW_HUB_HANDLE = 'https://tfhub.dev/google/magenta/arbitrary-image-stylization-v1-256/2'
