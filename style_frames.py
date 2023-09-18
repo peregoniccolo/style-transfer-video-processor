@@ -1,6 +1,8 @@
 # Brycen Westgarth and Tristan Jogminas
 # March 5, 2021
 # Modified by Marcin Zatorski, 15.09.2022
+# Modified by Niccolò Perego, 18.09.2023
+
 import os
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 import tensorflow_hub as hub
@@ -40,7 +42,7 @@ class StyleFrame:
 
         frame_count = vid_obj.get(cv2.CAP_PROP_FRAME_COUNT)
         fps = vid_obj.get(cv2.CAP_PROP_FPS)
-        self.frame_length = int(frame_count / fps * self.conf.INPUT_FPS)
+        self.frame_length = int(frame_count / fps * self.conf.INPUT_FPS) # new number of frames
         
         return vid_obj
 
@@ -89,19 +91,22 @@ class StyleFrame:
         success = True
         progress_bar = tqdm(total=self.frame_length)
         while success:
+            # where we at
             msec_timestamp = count * frame_interval
+            # set reader to time and read
             self.video_capture.set(cv2.CAP_PROP_POS_MSEC, msec_timestamp)
             success, content_img = self.video_capture.read()
             if not success:
                 break
+            # prep
             content_img = cv2.resize(content_img, (self.frame_width, self.conf.FRAME_HEIGHT))
             content_img = cv2.cvtColor(content_img, cv2.COLOR_BGR2RGB) / self.MAX_CHANNEL_INTENSITY
             curr_style_img_index = int(count / self.t_const)
             mix_ratio = 1 - ((count % self.t_const) / self.t_const)
             inv_mix_ratio = 1 - mix_ratio
 
-            prev_image = self.transition_style_seq[curr_style_img_index]
-            next_image = self.transition_style_seq[curr_style_img_index + 1]
+            prev_image = self.transition_style_seq[curr_style_img_index] if curr_style_img_index < self.ref_count else None
+            next_image = self.transition_style_seq[curr_style_img_index + 1] if curr_style_img_index + 1 < self.ref_count else None
             
             prev_is_content_img = False
             next_is_content_img = False
