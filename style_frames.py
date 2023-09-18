@@ -87,6 +87,8 @@ class StyleFrame:
         video_writer = self.create_video_writer()
         frame_interval = (1.0 / self.conf.INPUT_FPS) * 1000
 
+        halfway_frame = np.ceil(self.frame_length / 2)
+
         count = 0
         success = True
         progress_bar = tqdm(total=self.frame_length)
@@ -101,9 +103,15 @@ class StyleFrame:
             # prep
             content_img = cv2.resize(content_img, (self.frame_width, self.conf.FRAME_HEIGHT))
             content_img = cv2.cvtColor(content_img, cv2.COLOR_BGR2RGB) / self.MAX_CHANNEL_INTENSITY
-            curr_style_img_index = int(count / self.t_const)
-            mix_ratio = 1 - ((count % self.t_const) / self.t_const)
-            inv_mix_ratio = 1 - mix_ratio
+            
+            # first tests
+            # curr_style_img_index = int(count / self.t_const)
+            # mix_ratio = 1 - ((count % self.t_const) / self.t_const)
+            # inv_mix_ratio = 1 - mix_ratio
+
+            curr_style_img_index = 0 if count < halfway_frame else 1
+            mix_ratio = 1
+            inv_mix_ratio = 0
 
             prev_image = self.transition_style_seq[curr_style_img_index] if curr_style_img_index < self.ref_count else None
             next_image = self.transition_style_seq[curr_style_img_index + 1] if curr_style_img_index + 1 < self.ref_count else None
