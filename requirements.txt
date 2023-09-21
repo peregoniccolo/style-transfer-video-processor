@@ -1,5 +1,5 @@
 numpy>=1.19.5
-opencv-python>=4.5.1.48
 tensorflow>=2.4.1
 tensorflow-hub>=0.11.0
 tqdm>=4.51.0
+moviepy>=1.0.3

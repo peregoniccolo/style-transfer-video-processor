@@ -1,5 +1,6 @@
 # Neural Style Transfer Transition Video Processing
 By Brycen Westgarth and Tristan Jogminas
+Modified by Marcin Zatorski and Niccolò Perego
 
 ## Description
 This code extends the [neural style transfer](https://www.tensorflow.org/tutorials/generative/style_transfer) 
@@ -30,15 +31,14 @@ locations can be set by the user in config.py
 
 Configurable Variable in config.py			         | Description
 ------------------------|------------
-ROOT_PATH     	| Path to input/output directory
 FRAME_HEIGHT    | Sets height dimension in pixels to resize the output video to. Video width will be calculated automatically to preserve aspect ratio. Low values will speed up processing time but reduce output video quality 
 INPUT_FPS 			    | Defines the rate at which frames are captured from the input video
-INPUT_VIDEO_NAME     	| Filename of input video
+INPUT_VIDEO_PATH     	| Path to input video file
 STYLE_SEQUENCE     	| List that contains the indices corresponding to the image files in the 'style_ref' folder. Defines the reference style image transition sequence. Can be arbitrary length, the rate at which the video transitions between styles will be adjusted to fit the video
 OUTPUT_FPS		    | Defines the frame rate of the output video
-OUTPUT_VIDEO_NAME   | Filename of output video to be created
+OUTPUT_NAME   | Filename of output video to be created  (without extention)
+OUTPUT_DESTINATION   | Destination folder path for the output video
 GHOST_FRAME_TRANSPARENCY | Proportional feedback constant for frame generation. Should be a value between 0 and 1. Affects the amount change that can occur between frames and the smoothness of the transitions. 
-CLEAR_INPUT_FRAME_CACHE  | If True the program clears the captured input frames each run. If False, you can run multiple style sequences without having to recapture video frames
 PRESERVE_COLORS      | If True the output video will preserve the colors of the input video. If  False the program will perform standard style transfer
 
 **The user must find and place their own style reference images in the `style_ref` directory. 
@@ -54,10 +54,14 @@ Minor video time effects can be created by setting INPUT_FPS and OUTPUT_FPS to d
 
 ## Usage
 ```
-$ python3 -m venv env
-$ source env/bin/activate
-$ pip3 install -r requirements.txt
-$ python3 style_frames.py
+$ conda create --name env
+$ conda activate env
+$ conda install -c conda-forge opencv
+```
+Before proceding, if CUDA is available on your machine, now follow this <a href="https://www.tensorflow.org/install/pip?hl=it">guide</a> to make Tensorflow expoit your GPU. 
+```
+$ pip install -r requirements.txt
+$ python style_frames.py -i *input_video_path* [-args]
 ```
 
 ## Examples
