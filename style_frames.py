@@ -46,7 +46,7 @@ class StyleFrame:
         frame_count = vid_obj.get(cv2.CAP_PROP_FRAME_COUNT)
         fps = vid_obj.get(cv2.CAP_PROP_FPS)
         # new number of frames
-        self.frame_length = int(frame_count / fps * self.conf.INPUT_FPS)
+        self.frame_length = int(frame_count / fps * self.conf.FPS)
 
         return vid_obj
 
@@ -92,13 +92,18 @@ class StyleFrame:
         ghost_frame = None
 
         video_writer = self.create_video_writer()
-        frame_interval = (1.0 / self.conf.INPUT_FPS) * 1000
+        frame_interval = (1.0 / self.conf.FPS) * 1000
 
         halfway_frame = np.ceil(self.frame_length / 2)
 
         count = 0
+        curr_style_img_index = -1
         success = True
         progress_bar = tqdm(total=self.frame_length)
+
+        change_style_frames = [int(value*self.frame_length)
+                               for value in self.conf.TIME_SEQUENCE]
+
         while success:
             # where we at
             msec_timestamp = count * frame_interval
@@ -118,9 +123,16 @@ class StyleFrame:
             # mix_ratio = 1 - ((count % self.t_const) / self.t_const)
             # inv_mix_ratio = 1 - mix_ratio
 
-            curr_style_img_index = 0 if count < halfway_frame else 1
-            mix_ratio = 1
-            inv_mix_ratio = 0
+            # curr_style_img_index = 0 if count < halfway_frame else 1
+            if change_style_frames.__contains__(count):
+                curr_style_img_index += 1
+            num = change_style_frames[curr_style_img_index + 1] - \
+                count if curr_style_img_index + 1 < self.ref_count else 0
+            den = change_style_frames[curr_style_img_index + 1] - \
+                change_style_frames[curr_style_img_index] if curr_style_img_index + \
+                1 < self.ref_count else 1
+            mix_ratio = num / den
+            inv_mix_ratio = 1 - mix_ratio
 
             prev_image = self.transition_style_seq[curr_style_img_index] if curr_style_img_index < self.ref_count else None
             next_image = self.transition_style_seq[curr_style_img_index +
@@ -213,12 +225,12 @@ class StyleFrame:
         # Use H.264 encoding to make videos about 2-3 times smaller
         fourcc = cv2.VideoWriter_fourcc(*'avc1')
         video_writer = cv2.VideoWriter(self.conf.NO_AUDIO_OUTPUT_VIDEO_PATH, fourcc,
-                                       self.conf.OUTPUT_FPS, (self.frame_width, self.conf.FRAME_HEIGHT))
+                                       self.conf.FPS, (self.frame_width, self.conf.FRAME_HEIGHT))
         if not video_writer.isOpened():
             # Fallback to mp4v if, for example, opencv was installed through pip
             fourcc = cv2.VideoWriter_fourcc(*'mp4v')
             video_writer = cv2.VideoWriter(self.conf.NO_AUDIO_OUTPUT_VIDEO_PATH, fourcc,
-                                           self.conf.OUTPUT_FPS, (self.frame_width, self.conf.FRAME_HEIGHT))
+                                           self.conf.FPS, (self.frame_width, self.conf.FRAME_HEIGHT))
         return video_writer
 
     def detach_audio(self):

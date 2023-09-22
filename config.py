@@ -6,25 +6,18 @@
 import argparse
 import os
 
-class Config:
-    def __init__(self):
-        parser = argparse.ArgumentParser(description='Neural style transfer for videos')
-        parser.add_argument('-i', '--input', required=True, help='Path to input video file')
-        parser.add_argument('-o', '--output_name', type=str, default='output', help='Name output video file (without extention)')
-        parser.add_argument('-d', '--output_destination', type=str, default='.', help='Destination folder for the output video file')
-        parser.add_argument('--input-fps', type=int, default=30)
-        parser.add_argument('--output-fps', type=int, default=30)
-        parser.add_argument('--frame-height', type=int, default=360, help='Height of output frame')
-        parser.add_argument('--style-sequence', type=int, nargs='+', default=[0, 1, 2])
-        parser.add_argument('--ghost-frame-transparency', type=float, default=0.1)
-        parser.add_argument('--preserve-colors', action='store_true')
 
-        args = parser.parse_args()
+class Config:
+    default_ts = [0.0, 0.5, 1.0]
+    default_ss = [0, 1, 2]
+
+    def __init__(self):
+        args = self.run_parser()
 
         # defines the maximum height dimension in pixels. Used for down-sampling the video frames
         self.FRAME_HEIGHT = args.frame_height
         # defines the rate at which you want to capture frames from the input video
-        self.INPUT_FPS = args.input_fps
+        self.FPS = args.fps
         self.INPUT_VIDEO_PATH = args.input
         _, self.INPUT_FILENAME = os.path.split(self.INPUT_VIDEO_PATH)
         self.INPUT_NAME, _ = os.path.splitext(self.INPUT_FILENAME)
@@ -32,14 +25,11 @@ class Config:
         self.STYLE_REF_DIRECTORY = './style_ref'
         self.MIDWAY_DIRECTORY = './midway'
         # defines the reference style image transition sequence. Values correspond to indices in STYLE_REF_DIRECTORY
-        # add None in the sequence to NOT apply style transfer for part of the video (ie. [None, 0, 1, 2])  
+        # add None in the sequence to NOT apply style transfer for part of the video (ie. [None, 0, 1, 2])
         self.STYLE_SEQUENCE = args.style_sequence
+        self.TIME_SEQUENCE = args.time_sequence
 
-        self.OUTPUT_FPS = args.output_fps
-        # self.COMPLETE_OUTPUT_VIDEO_PATH = args.output_name
-
-        # self.OUTPUT_VIDEO_PATH, self.OUTPUT_FILENAME = os.path.split(self.COMPLETE_OUTPUT_VIDEO_PATH)
-        # self.OUTPUT_NAME, self.OUTPUT_EXT = os.path.splitext(self.OUTPUT_FILENAME)
+        self.checks_on_sequences()
 
         self.OUTPUT_NAME = args.output_name
         self.OUTPUT_NAME, orig_ext = os.path.splitext(self.OUTPUT_NAME)
@@ -51,12 +41,74 @@ class Config:
         self.NO_AUDIO_OUTPUT_VIDEO_PATH = f'{self.MIDWAY_DIRECTORY}/no_audio_{self.OUTPUT_NAME}'
 
         self.OUTPUT_DESTINATION = args.output_destination
-        assert os.path.exists(self.OUTPUT_DESTINATION), 'specified destination does not exist'
+        assert os.path.exists(
+            self.OUTPUT_DESTINATION), 'specified destination does not exist'
 
-        self.COMPLETE_OUTPUT_VIDEO_PATH = os.path.join(self.OUTPUT_DESTINATION, self.OUTPUT_NAME)
+        self.COMPLETE_OUTPUT_VIDEO_PATH = os.path.join(
+            self.OUTPUT_DESTINATION, self.OUTPUT_NAME)
 
         self.GHOST_FRAME_TRANSPARENCY = args.ghost_frame_transparency
         self.PRESERVE_COLORS = args.preserve_colors
 
         self.TENSORFLOW_CACHE_DIRECTORY = './tensorflow_cache'
         self.TENSORFLOW_HUB_HANDLE = 'https://tfhub.dev/google/magenta/arbitrary-image-stylization-v1-256/2'
+
+    def run_parser(self):
+        parser = argparse.ArgumentParser(
+            description='Neural style transfer for videos')
+        parser.add_argument('-i', '--input', required=True,
+                            help='Path to input video file')
+        parser.add_argument('-o', '--output_name', type=str, default='output',
+                            help='Name output video file (without extention)')
+        parser.add_argument('-d', '--output_destination', type=str,
+                            default='.', help='Destination folder for the output video file')
+        parser.add_argument('--fps', type=int, default=30)
+        # parser.add_argument('--output-fps', type=int, default=30)
+        parser.add_argument('--frame_height', type=int,
+                            default=360, help='Height of output frame')
+        parser.add_argument('-ss', '--style_sequence',
+                            type=int, nargs='+')
+        parser.add_argument('-ts', '--time_sequence',
+                            type=float, nargs='+')
+        parser.add_argument('--ghost_frame_transparency',
+                            type=float, default=0.1)
+        parser.add_argument('--preserve_colors', action='store_true')
+
+        args = parser.parse_args()
+
+        if args.time_sequence == None and args.style_sequence != None:
+            parser.error("--style_sequence requires --time_sequence")
+        if args.time_sequence != None and args.style_sequence == None:
+            parser.error("--time_sequence requires --style_sequence")
+        
+        if args.time_sequence == None:
+            # both none, setting default
+            args.time_sequence == self.default_ts
+            args.style_sequence == self.default_ss
+
+        return args
+
+    def check_bounds_and_values(self):
+        count = 0
+        for value in self.TIME_SEQUENCE:
+            if count == 0:
+                assert value == 0, 'starting value in time sequence is not 0'
+            if count == len(self.TIME_SEQUENCE) - 1:
+                assert value == 1, 'ending value in time sequence is not 1'
+            assert isinstance(
+                value, float), f'value at position {count} in time sequence is not a number'
+            if not count == 0:
+                assert value > self.TIME_SEQUENCE[count -
+                                                  1], 'values in time sequence must be monotonically growing'
+            count += 1
+
+    def check_images_exist(self):
+        # TODO
+        return
+
+    def checks_on_sequences(self):
+        # they cannot be empty because of how argparse works
+        assert len(self.TIME_SEQUENCE) == len(
+            self.STYLE_SEQUENCE), 'time and style sequences have different lengths'
+        self.check_bounds_and_values()
+        self.check_images_exist()

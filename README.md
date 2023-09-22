@@ -32,10 +32,11 @@ locations can be set by the user in config.py
 Configurable Variable in config.py			         | Description
 ------------------------|------------
 FRAME_HEIGHT    | Sets height dimension in pixels to resize the output video to. Video width will be calculated automatically to preserve aspect ratio. Low values will speed up processing time but reduce output video quality 
-INPUT_FPS 			    | Defines the rate at which frames are captured from the input video
+FPS 			    | Defines the rate at which frames are captured from the input video (and written for the output one)
 INPUT_VIDEO_PATH     	| Path to input video file
-STYLE_SEQUENCE     	| List that contains the indices corresponding to the image files in the 'style_ref' folder. Defines the reference style image transition sequence. Can be arbitrary length, the rate at which the video transitions between styles will be adjusted to fit the video
-OUTPUT_FPS		    | Defines the frame rate of the output video
+STYLE_SEQUENCE     	| List that contains the indices corresponding to the image files in the 'style_ref' folder. Defines the reference style image transition sequence. Changes between images happen linearly w.r.t. the times specified in TIME_SEQUENCE
+TIME_SEQUENCE     	| List that contains the times (relative format, 0.0 - 1.0) at which the current style is changed for the next one.
+<!-- OUTPUT_FPS		    | Defines the frame rate of the output video -->
 OUTPUT_NAME   | Filename of output video to be created  (without extention)
 OUTPUT_DESTINATION   | Destination folder path for the output video
 GHOST_FRAME_TRANSPARENCY | Proportional feedback constant for frame generation. Should be a value between 0 and 1. Affects the amount change that can occur between frames and the smoothness of the transitions. 
@@ -46,10 +47,10 @@ PRESERVE_COLORS      | If True the output video will preserve the colors of the 
 arbitrary size. For best results, try to use style reference images with similar dimensions
 and aspect ratios. Three example style reference images are given.**<br/>
 <br/>
-Minor video time effects can be created by setting INPUT_FPS and OUTPUT_FPS to different relative values<br/>
+<!-- Minor video time effects can be created by setting INPUT_FPS and OUTPUT_FPS to different relative values<br/>
 - INPUT_FPS > OUTPUT_FPS creates a slowed time effect
 - INPUT_FPS = OUTPUT_FPS creates no time effect
-- INPUT_FPS < OUTPUT_FPS creates a timelapse effect
+- INPUT_FPS < OUTPUT_FPS creates a timelapse effect -->
 
 
 ## Usage
