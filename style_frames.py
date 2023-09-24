@@ -3,19 +3,19 @@
 # Modified by Marcin Zatorski, 15.09.2022
 # Modified by Niccolò Perego, 18.09.2023
 
+import os
+
+os.environ["TF_CPP_MIN_LOG_LEVEL"] = "1" # set this to 3 in production
+
 from config import Config
 from moviepy.editor import *
-from tqdm import tqdm
+from tqdm import tqdm 
 import logging
 import cv2
 import glob
 import tensorflow as tf
 import numpy as np
 import tensorflow_hub as hub
-import os
-
-os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
-
 tf.config.optimizer.set_jit("autoclustering")
 
 
@@ -105,7 +105,7 @@ class StyleFrame:
         video_writer = self.create_video_writer()
         frame_interval = (1.0 / self.conf.FPS) * 1000
 
-        halfway_frame = np.ceil(self.frame_length / 2)
+        #halfway_frame = np.ceil(self.frame_length / 2)
 
         count = 0
         curr_style_img_index = -1
@@ -251,19 +251,22 @@ class StyleFrame:
         )
 
     def create_video_writer(self):
+        path_to_output = self.conf.NO_AUDIO_OUTPUT_VIDEO_PATH if not self.conf.NO_AUDIO else self.conf.COMPLETE_OUTPUT_VIDEO_PATH
+
         # Use H.264 encoding to make videos about 2-3 times smaller
         fourcc = cv2.VideoWriter_fourcc(*"avc1")
         video_writer = cv2.VideoWriter(
-            self.conf.NO_AUDIO_OUTPUT_VIDEO_PATH,
+            path_to_output,
             fourcc,
             self.conf.FPS,
             (self.frame_width, self.conf.FRAME_HEIGHT),
         )
         if not video_writer.isOpened():
             # Fallback to mp4v if, for example, opencv was installed through pip
+            print('Using fallback fourcc. This happens when installing opencv with pip.')
             fourcc = cv2.VideoWriter_fourcc(*"mp4v")
             video_writer = cv2.VideoWriter(
-                self.conf.NO_AUDIO_OUTPUT_VIDEO_PATH,
+                path_to_output,
                 fourcc,
                 self.conf.FPS,
                 (self.frame_width, self.conf.FRAME_HEIGHT),
