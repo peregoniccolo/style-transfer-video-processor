@@ -83,8 +83,8 @@ class Config:
         
         if args.time_sequence == None:
             # both none, setting default
-            args.time_sequence == self.default_ts
-            args.style_sequence == self.default_ss
+            args.time_sequence = self.default_ts
+            args.style_sequence = self.default_ss
 
         return args
 
