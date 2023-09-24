@@ -53,6 +53,8 @@ class Config:
         self.TENSORFLOW_CACHE_DIRECTORY = './tensorflow_cache'
         self.TENSORFLOW_HUB_HANDLE = 'https://tfhub.dev/google/magenta/arbitrary-image-stylization-v1-256/2'
 
+        self.NO_AUDIO = args.no_audio
+
     def run_parser(self):
         parser = argparse.ArgumentParser(
             description='Neural style transfer for videos')
@@ -73,6 +75,7 @@ class Config:
         parser.add_argument('--ghost_frame_transparency',
                             type=float, default=0.1)
         parser.add_argument('--preserve_colors', action='store_true')
+        parser.add_argument('--no_audio', action='store_true')
 
         args = parser.parse_args()
 
