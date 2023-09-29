@@ -42,6 +42,9 @@ GHOST_FRAME_TRANSPARENCY            | Proportional feedback constant for frame g
 PRESERVE_COLORS                     | If True the output video will preserve the colors of the input video. If  False the program will perform standard style transfer.
 NO_AUDIO                            | If true, the output video will no preserve the audio of the input video.
 <!-- OUTPUT_FPS		                | Defines the frame rate of the output video -->
+LOCAL_MODEL                         | Path to the local tensorflow_hub model, if available.
+STYLE_FOLDER                        | Folder containing the style images to use, named as numbers.
+MIDWAY_FOLDERS                      | Folder used to save midway results like detached audio and video files.
 
 **The user must find and place their own style reference images in the `style_ref` directory. 
 Style reference images can be arbitrary size. For best results, try to use style reference images with similar dimensions

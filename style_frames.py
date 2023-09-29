@@ -4,8 +4,11 @@
 # Modified by Niccolò Perego, 18.09.2023
 
 import os
+# os.environ["tf_CPP_MIN_LOG_LEVEL"] = "3" # set this to 3 in production
+# os.environ["XLA_FLAGS"]="--xla_gpu_strict_conv_algorithm_picker=false"
 
-os.environ["TF_CPP_MIN_LOG_LEVEL"] = "1" # set this to 3 in production
+import tensorflow as tf
+tf.config.optimizer.set_jit("autoclustering")
 
 from config import Config
 from moviepy.editor import *
@@ -13,11 +16,8 @@ from tqdm import tqdm
 import logging
 import cv2
 import glob
-import tensorflow as tf
 import numpy as np
 import tensorflow_hub as hub
-tf.config.optimizer.set_jit("autoclustering")
-
 
 class StyleFrame:
     MAX_CHANNEL_INTENSITY = 255.0
@@ -25,7 +25,9 @@ class StyleFrame:
     def __init__(self, conf=Config):
         self.conf = conf()
         os.environ["TFHUB_CACHE_DIR"] = self.conf.TENSORFLOW_CACHE_DIRECTORY
+        print("Loading module...")
         self.hub_module = hub.load(self.conf.TENSORFLOW_HUB_HANDLE)
+        print("Done")
         self.style_directory = glob.glob(f"{self.conf.STYLE_REF_DIRECTORY}/*")
         self.ref_count = len(self.conf.STYLE_SEQUENCE)
 
@@ -296,6 +298,8 @@ class StyleFrame:
             print("Reattaching audio")
             self.reattach_audio()
 
+def module_run():
+    StyleFrame().run()
 
 if __name__ == "__main__":
-    StyleFrame().run()
+    module_run()
