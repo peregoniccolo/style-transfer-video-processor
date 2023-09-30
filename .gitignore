@@ -4,6 +4,10 @@ __pycache__
 *.mov
 *.mp4
 # *.mp3
+
+!**/.gitkeep
+
 !input_vid.mov
 midway/*
+output/*
 local_model
