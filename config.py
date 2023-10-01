@@ -19,6 +19,7 @@ class Config:
         # defines the rate at which you want to capture frames from the input video
         self.FPS = args.fps
         self.INPUT_VIDEO_PATH = args.input
+        assert os.path.exists(self.INPUT_VIDEO_PATH), "specified input is not found"
         _, self.INPUT_FILENAME = os.path.split(self.INPUT_VIDEO_PATH)
         self.INPUT_NAME, _ = os.path.splitext(self.INPUT_FILENAME)
 

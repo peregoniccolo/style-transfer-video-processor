@@ -37,6 +37,7 @@ class StyleFrame:
     def create_video_capture(self):
         vid_obj = cv2.VideoCapture(self.conf.INPUT_VIDEO_PATH)
         success, image = vid_obj.read()
+        assert success, "NO SUCCESS, check input video"
         if image is None:
             raise ValueError(
                 f"ERROR: Please provide missing video: {self.conf.INPUT_VIDEO_PATH}"
