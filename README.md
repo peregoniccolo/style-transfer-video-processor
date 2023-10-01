@@ -45,6 +45,7 @@ NO_AUDIO                            | If true, the output video will no preserve
 LOCAL_MODEL                         | Path to the local tensorflow_hub model, if available.
 STYLE_FOLDER                        | Folder containing the style images to use, named as numbers.
 MIDWAY_FOLDERS                      | Folder used to save midway results like detached audio and video files.
+AUDIO_PATH                          | Path to audio existing file to attach to the styled videos
 
 **The user must find and place their own style reference images in the `style_ref` directory. 
 Style reference images can be arbitrary size. For best results, try to use style reference images with similar dimensions

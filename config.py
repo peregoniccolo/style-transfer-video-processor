@@ -74,6 +74,10 @@ class Config:
 
         self.NO_AUDIO = args.no_audio
 
+        self.AUDIO_PATH = args.audio
+        if self.AUDIO_PATH != None:
+            assert os.path.exists(self.AUDIO_PATH), "specified audio file to attach does not exist"
+
     def run_parser(self):
         parser = argparse.ArgumentParser(description="Neural style transfer for videos")
         parser.add_argument(
@@ -124,6 +128,13 @@ class Config:
             default="midway",
             help="Folder that will contain checkpoints like detached audio and video files.",
         )
+        parser.add_argument(
+            "-a",
+            "--audio",
+            type=str,
+            default=None,
+            help="Path to audio file to attach to the output video."
+        )
 
         args = parser.parse_args()
 
@@ -156,7 +167,7 @@ class Config:
             count += 1
 
     def check_images_exist(self):
-        # TODO
+        # TODO it is not needed for Synthesia as images are saved by the gui
         return
 
     def checks_on_sequences(self):

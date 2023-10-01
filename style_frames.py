@@ -281,9 +281,13 @@ class StyleFrame:
         audio = video.audio
         audio.write_audiofile(self.conf.OUTPUT_AUDIO_PATH)
 
-    def reattach_audio(self):
-        styled_video_clip = VideoFileClip(self.conf.NO_AUDIO_OUTPUT_VIDEO_PATH)
-        audio_clip = AudioFileClip(self.conf.OUTPUT_AUDIO_PATH)
+    def reattach_audio(self):        
+        if self.conf.AUDIO_PATH == None:
+            styled_video_clip = VideoFileClip(self.conf.NO_AUDIO_OUTPUT_VIDEO_PATH)
+            audio_clip = AudioFileClip(self.conf.OUTPUT_AUDIO_PATH)
+        else:
+            styled_video_clip = VideoFileClip(self.conf.COMPLETE_OUTPUT_VIDEO_PATH)
+            audio_clip = AudioFileClip(self.conf.AUDIO_PATH)
         video_with_audio = styled_video_clip.set_audio(audio_clip)
         video_with_audio.write_videofile(self.conf.COMPLETE_OUTPUT_VIDEO_PATH)
 
@@ -295,7 +299,7 @@ class StyleFrame:
         self.get_style_info()
         print("Doing style transfer")
         self.get_output_frames()
-        if not self.conf.NO_AUDIO:
+        if not self.conf.NO_AUDIO or self.conf.AUDIO_PATH != None:
             print("Reattaching audio")
             self.reattach_audio()
 
